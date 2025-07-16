@@ -3,21 +3,46 @@ import { useModel } from '@umijs/max';
 import { Card, theme } from 'antd';
 import React from 'react';
 
-/**
- * 每个单独的卡片，为了复用样式抽成了组件
- * @param param0
- * @returns
- */
-const InfoCard: React.FC<{
-  title: string;
-  index: number;
-  desc: string;
-  href: string;
-}> = ({ title, href, index, desc }) => {
-  const { useToken } = theme;
+const steps = [
+  {
+    index: 1,
+    title: '步骤一：项目初始化',
+    desc: '流程始于项目初始化。用户首先选择本次采购的类型（POC）和采购“服务类”类型，系统会基于该选择，智能匹配并初始化结构化的采购文件章节结构与导航表模板，为后续的结构细化信息采集奠定基础。',
+  },
+  {
+    index: 2,
+    title: '步骤二：导航表单填写',
+    desc: '系统提供一个多步骤的导航式表单，用户需按照步骤填写基础信息、采购信息、项目特点等结构化数据（如技术参数、以及供应商准入标准等），系统将结构化的数据整合后续章节内容生成的基础。',
+  },
+  {
+    index: 3,
+    title: '步骤三：章节内容生成',
+    desc: '这是本系统的核心。系统采用混合模式生成采购文件章节内容：对于“第一章 项目概况及公司/管理要求”等采购专业内容，利用知识库和大模型，结合知识与用户填写数据智能创作；对于“第二、三、四章”等标准内容，则进行模板化数据填充。',
+  },
+  {
+    index: 4,
+    title: '步骤四：整合与导出',
+    desc: '所有章节生成后，系统会自动整合为一份完整的采购文件草案。提供在线预览与富文本编辑功能，支持用户进行最终内容查阅与修改。确认无误后，一键导出为PDF或Word格式，归档或直接进行提交。',
+  },
+];
 
-  const { token } = useToken();
+const highlights = [
+  {
+    title: '混合式内容引擎',
+    desc: '将大模型（AI）的灵活性与固化模板的确定性相结合。既能确保动态内容（如采购需求、服务标准）的专业创新，又能保证标准内容（如合同条款、固定声明）的绝对准确无误。',
+  },
+  {
+    title: '基于知识库的专业Prompt',
+    desc: '内置了行业标杆案例与专业知识库，结合采购场景精细化设计的Prompt指令集，引导AI生成高质量的行业规范和商业标准的专业文案，避免了通用模型的“空话套话”。',
+  },
+  {
+    title: '人机协作的编辑流程',
+    desc: 'AI生成内容后，提供实时在线预览与富文本编辑功能。用户可以随时补充个性化内容，对特定段落进行调整与改动，实现“AI赋能而非取代人”的高效协作模式，确保最终文档100%符合需求。',
+  },
+];
 
+const StepCard: React.FC<{ index: number; title: string; desc: string }> = ({ index, title, desc }) => {
+  const { token } = theme.useToken();
   return (
     <div
       style={{
@@ -30,55 +55,50 @@ const InfoCard: React.FC<{
         padding: '16px 19px',
         minWidth: '220px',
         flex: 1,
+        margin: '8px',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          gap: '4px',
-          alignItems: 'center',
-        }}
-      >
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
         <div
           style={{
-            width: 48,
-            height: 48,
-            lineHeight: '22px',
-            backgroundSize: '100%',
-            textAlign: 'center',
-            padding: '8px 16px 16px 12px',
-            color: '#FFF',
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: '#1677ff',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             fontWeight: 'bold',
-            backgroundImage:
-              "url('https://gw.alipayobjects.com/zos/bmw-prod/daaf8d50-8e6d-4251-905d-676a24ddfa12.svg')",
+            fontSize: 18,
+            marginRight: 12,
           }}
         >
           {index}
         </div>
-        <div
-          style={{
-            fontSize: '16px',
-            color: token.colorText,
-            paddingBottom: 8,
-          }}
-        >
-          {title}
-        </div>
+        <div style={{ fontSize: 16, color: token.colorTextHeading, fontWeight: 500 }}>{title}</div>
       </div>
-      <div
-        style={{
-          fontSize: '14px',
-          color: token.colorTextSecondary,
-          textAlign: 'justify',
-          lineHeight: '22px',
-          marginBottom: 8,
-        }}
-      >
-        {desc}
-      </div>
-      <a href={href} target="_blank" rel="noreferrer">
-        了解更多 {'>'}
-      </a>
+      <div style={{ fontSize: 14, color: token.colorTextSecondary, textAlign: 'justify' }}>{desc}</div>
+    </div>
+  );
+};
+
+const HighlightCard: React.FC<{ title: string; desc: string }> = ({ title, desc }) => {
+  const { token } = theme.useToken();
+  return (
+    <div
+      style={{
+        background: token.colorBgContainer,
+        borderRadius: 8,
+        boxShadow: token.boxShadowSecondary,
+        padding: '18px 20px',
+        flex: 1,
+        minWidth: 220,
+        margin: '8px',
+      }}
+    >
+      <div style={{ fontWeight: 500, fontSize: 16, color: token.colorTextHeading, marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 14, color: token.colorTextSecondary, textAlign: 'justify' }}>{desc}</div>
     </div>
   );
 };
@@ -89,9 +109,7 @@ const Welcome: React.FC = () => {
   return (
     <PageContainer>
       <Card
-        style={{
-          borderRadius: 8,
-        }}
+        style={{ borderRadius: 8 }}
         styles={{
           body: {
             backgroundImage:
@@ -101,61 +119,25 @@ const Welcome: React.FC = () => {
           },
         }}
       >
-        <div
-          style={{
-            backgroundPosition: '100% -30%',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '274px auto',
-            backgroundImage:
-              "url('https://gw.alipayobjects.com/mdn/rms_a9745b/afts/img/A*BuFmQqsB2iAAAAAAAAAAAAAAARQnAQ')",
-          }}
-        >
-          <div
-            style={{
-              fontSize: '20px',
-              color: token.colorTextHeading,
-            }}
-          >
-            欢迎使用 Ant Design Pro
+        <div style={{ padding: '8px 0 24px 0' }}>
+          <div style={{ fontSize: 22, fontWeight: 600, color: token.colorTextHeading, marginBottom: 8 }}>
+            欢迎使用 智能采购文件生成系统（POC）
           </div>
-          <p
-            style={{
-              fontSize: '14px',
-              color: token.colorTextSecondary,
-              lineHeight: '22px',
-              marginTop: 16,
-              marginBottom: 32,
-              width: '65%',
-            }}
-          >
-            Ant Design Pro 是一个整合了 umi，Ant Design 和 ProComponents
-            的脚手架方案。致力于在设计规范和基础组件的基础上，继续向上构建，提炼出典型模板/业务组件/配套设计资源，进一步提升企业级中后台产品设计研发过程中的『用户』和『设计者』的体验。
-          </p>
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 16,
-            }}
-          >
-            <InfoCard
-              index={1}
-              href="https://umijs.org/docs/introduce/introduce"
-              title="了解 umi"
-              desc="umi 是一个可扩展的企业级前端应用框架,umi 以路由为基础的，同时支持配置式路由和约定式路由，保证路由的功能完备，并以此进行功能扩展。"
-            />
-            <InfoCard
-              index={2}
-              title="了解 ant design"
-              href="https://ant.design"
-              desc="antd 是基于 Ant Design 设计体系的 React UI 组件库，主要用于研发企业级中后台产品。"
-            />
-            <InfoCard
-              index={3}
-              title="了解 Pro Components"
-              href="https://procomponents.ant.design"
-              desc="ProComponents 是一个基于 Ant Design 做了更高抽象的模板组件，以 一个组件就是一个页面为开发理念，为中后台开发带来更好的体验。"
-            />
+          <div style={{ fontSize: 15, color: token.colorTextSecondary, marginBottom: 24, lineHeight: '24px', width: '90%' }}>
+            本系统致力于解决传统采购文件编制申报时，易错、繁琐、标准化难的问题。我们通过结合前端引导式表单、固定模板填充与大模型（AI）智能生成的混合模式，将繁琐的文档生产流程提化、自动化。用户只需按照引导完成结构信息输入，即可一键生成结构完整、内容准确、专业规范的采购文件，显著提升企业采购工作的效率与合规性。
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 32 }}>
+            {steps.map((step) => (
+              <StepCard key={step.index} {...step} />
+            ))}
+          </div>
+          <div style={{ fontSize: 18, fontWeight: 600, color: token.colorTextHeading, margin: '32px 0 16px 0' }}>
+            核心亮点
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {highlights.map((item, idx) => (
+              <HighlightCard key={idx} {...item} />
+            ))}
           </div>
         </div>
       </Card>

@@ -1,16 +1,23 @@
 export type TableListItem = {
+  id: number;
   key: number;
-  disabled?: boolean;
-  href: string;
-  avatar: string;
-  name: string;
-  owner: string;
-  desc: string;
-  callNo: number;
+  createTime: string;
+  creator: string;
+  isDeleted: string;
+  modifier: string;
+  modifiyTime: string;
+  procurementScope: string;
+  productOverview: string;
+  projectName: string;
+  serviceLocation: string;
+  servicePeriod: string;
+  serviceStandards: string;
   status: string;
-  updatedAt: Date;
-  createdAt: Date;
-  progress: number;
+  supplierContent: string;
+  supplierDemandRemark: string;
+  supplierDemandTitle: string;
+  templentId: number;
+  tenantId: number | null;
 };
 
 export type TableListPagination = {

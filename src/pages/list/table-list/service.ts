@@ -3,63 +3,57 @@
 import { request } from '@umijs/max';
 import type { TableListItem } from './data';
 
-/** 获取规则列表 GET /api/rule */
-export async function rule(
-  params: {
-    // query
-    /** 当前的页码 */
-    current?: number;
-    /** 页面的容量 */
-    pageSize?: number;
-  },
-  options?: { [key: string]: any },
-) {
-  return request<{
-    data: TableListItem[];
-    /** 列表的内容总数 */
-    total?: number;
-    success?: boolean;
-  }>('/api/rule', {
-    method: 'GET',
-    params: {
-      ...params,
-    },
-    ...(options || {}),
-  });
+interface RequestData<T> {
+  data: T,
+  message: string,
+  status: number
 }
 
-/** 新建规则 PUT /api/rule */
-export async function updateRule(
-  data: { [key: string]: any },
-  options?: { [key: string]: any },
-) {
-  return request<TableListItem>('/api/rule', {
-    data,
-    method: 'PUT',
-    ...(options || {}),
-  });
-}
-
-/** 新建规则 POST /api/rule */
-export async function addRule(
-  data: { [key: string]: any },
-  options?: { [key: string]: any },
-) {
-  return request<TableListItem>('/api/rule', {
+// 获取采购项目列表
+export async function getContractBasePage(data: any) {
+  return request<RequestData<any>>('/api/poc/contract/base/page',  {
     data,
     method: 'POST',
-    ...(options || {}),
   });
 }
 
-/** 删除规则 DELETE /api/rule */
-export async function removeRule(
-  data: { key: number[] },
-  options?: { [key: string]: any },
-) {
-  return request<Record<string, any>>('/api/rule', {
+// 获取采购类型树
+export async function getCategoryTree() {
+  return request<RequestData<any>>('/api/poc/templent/list',  {
+    method: 'get',
+  });
+}
+
+// 保存采购项目
+export async function saveContractBase(data: any) {
+  return request<RequestData<any>>('/api/poc/contract/base/saveOrUpdate',  {
     data,
-    method: 'DELETE',
-    ...(options || {}),
+    method: 'POST',
+  });
+}
+
+// 获取采购项目详情
+export async function getContractBaseInfo(data: any) {
+  return request<RequestData<any>>('/api/poc/contract/base/info',  {
+    method: 'get',
+    params: data
+  });
+}
+
+
+// 初始化采购项目内容
+export async function initContractContent(data: any) {
+  console.log('data', data);
+  return request<RequestData<any>>('/api/poc/contract/content/init',  {
+    method: 'get',
+    params: data
+  });
+}
+
+// 删除采购项目
+export async function deleteContractBase(data: any) {
+  return request<RequestData<any>>('/api/poc/contract/base/delete',  {
+    method: 'get',
+    params: data
   });
 }
