@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, Button, Input } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
+import { IContractBaseInfo, ChapterItem } from '../service';
 
 interface Block {
   title: string;
@@ -14,10 +15,35 @@ interface AiOptimizeModalProps {
   open: boolean;
   onClose: () => void;
   onOk: () => void;
-  blocks: Block[];
+  currentChapter: ChapterItem | null;
+  onChange: (v: string) => void;
+  contractBaseInfo: IContractBaseInfo
 }
 
-const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, blocks }) => {
+const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, currentChapter, onChange, contractBaseInfo }) => {
+  const [blocks, setBlocks] = useState<any[]>([]);
+  useEffect(() => {
+    setBlocks([
+      {
+        title: '项目描述/范围',
+        key: 'productOverview',
+        value: contractBaseInfo.productOverview,
+        placeholder: '请输入项目描述/范围...'
+      },
+      {
+        title: '质量要求/服务标准',
+        key: 'serviceStandards',
+        value: contractBaseInfo.serviceStandards,
+        placeholder: '请输入质量要求/服务标准...'
+      }
+    ])
+    
+  }, [open])
+
+  const handleChange = (v: string) => {
+
+  }
+
   return (
     <Modal
       open={open}
@@ -27,7 +53,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
         <Button key="cancel" onClick={onClose}>取消</Button>,
         <Button key="ok" type="primary" onClick={onOk}>确认更新</Button>
       ]}
-      width={900}
+      width="80%"
       bodyStyle={{ maxHeight: '80vh', overflow: 'auto' }}
     >
       {blocks.map((block, idx) => (
@@ -35,7 +61,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
           <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>{idx + 1}. {block.title}</div>
           <Input.TextArea
             value={block.value}
-            onChange={e => block.onChange(e.target.value)}
+            onChange={e => handleChange(e.target.value)}
             autoSize={{ minRows: 4, maxRows: 10 }}
             placeholder={block.placeholder}
           />

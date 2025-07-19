@@ -132,7 +132,6 @@ const ChapterEdit = (props: ChapterEditProps) => {
         onClose={() => setAiModalVisible(false)}
         onOk={() => setAiModalVisible(false)}
         currentChapter={currentChapter}
-        contractBaseInfo={contractBaseInfo}
         onChange={handleAiEditorChange}
       />
       <MarkdownEditModal
