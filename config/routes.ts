@@ -29,23 +29,19 @@ export default [
     name: '采购项目',
     routes: [
       {
-        path: '/list',
-        redirect: '/list/table-list',
-      },
-      {
         hideInMenu: true,
         layout: false,
         name: '详情页',
         path: '/list/detail/:id',
-        component: './list/table-list/detail',
+        component: './list/detail',
         wrappers: [
           '@/layout/pure',
         ],
       },
       {
         name: '列表页',
-        path: '/list/table-list',
-        component: './list/table-list',
+        path: '/list',
+        component: './list',
       },
     ],
   },
