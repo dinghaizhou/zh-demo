@@ -30,7 +30,7 @@ const ChapterEdit = (props: ChapterEditProps) => {
 
   useEffect(() => {
     if (contractBaseId) {
-      initContractContent({contractBaseId})
+      initContractContent({ contractBaseId })
       .then((res) => {
           if (res.status === 200) {
             let _data = res.data.map((item: ChapterItem, index: number) => {
