@@ -1,150 +1,208 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Tag, Modal } from 'antd';
-import { EyeOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Tag, Card, Row, Col, Descriptions, Space, message } from 'antd';
+import { EyeOutlined, DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import PreviewModal from './PreviewModal';
-import AiOptimizeModal from './AiOptimizeModal';
-import MarkdownEditModal from './MarkdownEditModal';
-import { ChapterItem, initContractContent, saveContentBase} from '../service';
+import { ChapterItem, IContractBaseInfo, exportDocument } from '../service';
+import { useModel } from "umi";
+import { exportMarkdownToWord } from '../utils/wordExport';
 
-
-interface ChapterEditProps {
+interface Step4Props {
   contractBaseId: number,
-  contractBaseInfo: any,
+  contractBaseInfo?: IContractBaseInfo | null,
   onPrev: () => void,
   onNext: () => void,
   actionType: string
 }
 
-const ChapterEdit = (props: ChapterEditProps) => {
-  const { contractBaseId, contractBaseInfo } = props;
+const Step4 = (props: Step4Props) => {
+  const { contractBaseInfo } = useModel("list.contractBaseInfo");
   const [chapterList, setChapterList] = useState<Array<ChapterItem>>([]);
-  const [currentChapter, setCurrentChapter] = useState<ChapterItem | null>(null);
-
-  // 预览框
   const [previewVisible, setPreviewVisible] = useState(false);
-  // ai编辑框
-  const [aiModalVisible, setAiModalVisible] = useState(false);
-  // markdown编辑框
-  const [mdModalOpen, setmdModalVisible] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
 
   useEffect(() => {
-    if (contractBaseId) {
-      initContractContent({contractBaseId})
-      .then((res) => {
-          if (res.status === 200) {
-            let _data = res.data.map((item: ChapterItem, index: number) => {
-              return {
-                ...item,
-                aiSupport: !![0, 4].includes(index),
-                disabled: +index === 4,
-                status: '已完成',
-                description: [0, 4].includes(index) ? '支持AI优化和分点编辑' : '通用Markdown编辑器'
-              }
-            })
-            setChapterList(_data)
-          }
-      })
-    } 
-  }, [contractBaseId])
+    if (contractBaseInfo?.contentList) {
+      setChapterList(contractBaseInfo.contentList);
+    }
+  }, [contractBaseInfo]);
 
-  const handlePreview = (chapter: ChapterItem) => {
-    setCurrentChapter(chapter);
+  const handleFullScreenPreview = () => {
     setPreviewVisible(true);
   };
 
-  const handleAiEdit = (chapter: ChapterItem) => {
-    setAiModalVisible(true);
-    setCurrentChapter(chapter);
+  // 拼接所有章节内容
+  const getFullDocumentContent = () => {
+    if (!chapterList || chapterList.length === 0) {
+      return '';
+    }
+    return chapterList
+      .sort((a, b) => a.templentChapterId - b.templentChapterId) // 按章节ID排序
+      .map(chapter => {
+        const content = chapter.templentChapterContent || '';
+        return `${content}`;
+      })
+      .join('\n'); 
   };
 
-  const handleMarkdownEdit = (chapter: ChapterItem) => {
-    setCurrentChapter(chapter);
-    setmdModalVisible(true);
+  // 使用marked处理markdown并导出Word文档
+  const handleDownloadWord = async () => {
+    const content = getFullDocumentContent();
+    if (!content) {
+      message.warning('暂无文档内容可导出');
+      return;
+    }
+
+    setExportLoading(true);
+    try {
+      await exportMarkdownToWord(
+        content,
+        contractBaseInfo?.projectName || '采购文档',
+        {
+          projectName: contractBaseInfo?.projectName,
+          procurementUnit: contractBaseInfo?.procurementUnit,
+          servicePeriod: contractBaseInfo?.servicePeriod,
+          serviceLocation: contractBaseInfo?.serviceLocation
+        }
+      );
+      message.success('Word文档导出成功');
+    } catch (error) {
+      console.error('导出Word文档失败:', error);
+      message.error('导出失败，请重试');
+    } finally {
+      setExportLoading(false);
+    }
   };
 
   const handlePrev = () => {
     if (props.onPrev) props.onPrev();
   };
 
-  const handleContentUpdate = async (value: string) => {
-    let _contentList =  chapterList.map((item: ChapterItem) => {
-      if (item.templentChapterId === currentChapter?.templentChapterId) {
-        return {
-          ...item,
-          templentChapterContent: value
-        }
-      }
-      return item
-    })
-    setChapterList(_contentList);
+  const handleFinish = () => {
+    message.success('文档生成完成！');
+    if (props.onNext) props.onNext();
   };
 
-  const handleAiEditorChange = (value: string) => {
-    console.log('value', value);
+  // 计算字符数
+  const getCharCount = (content: string) => {
+    return content ? content.length : 0;
   };
-
-  const handleContentSave = async () => {
-    await saveContentBase({
-      contractBaseId,
-      contractContents: chapterList
-    })
-    props?.onNext();
-  }
 
   return (
     <>
-      <Title level={3}>步骤三：章节内容生成与编辑</Title>
-      {chapterList.map((chapter: ChapterItem, idx) => (
-        <div key={chapter.templentChapterId} className="step3-chapter-row">
-          <div className="step3-chapter-info">
-            <div className="step3-chapter-title-row">
-              <span className="step3-chapter-title">{chapter.templentChapterName}</span>
-              <Tag color="green" className="step3-chapter-status">{chapter.status}</Tag>
-            </div>
-            <div className="step3-chapter-desc">{chapter.description}</div>
-          </div>
-          <div className="step3-chapter-btns">
-            <Button icon={<EyeOutlined />} onClick={() => handlePreview(chapter)}>预览</Button>
-            <Button
-              disabled={chapter.disabled}
-              type={chapter.aiSupport ? 'primary' : 'default'}
-              className={chapter.aiSupport ? 'step3-btn-ai' : 'step3-btn'}
-              icon={<EditOutlined />}
-              onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter)}
-            >
-              {chapter.aiSupport ? '编辑/AI 优化' : '编辑'}
-            </Button>
+      <Title level={3}>步骤四：整合与导出</Title>
+      
+      <div style={{ marginBottom: 24 }}>
+        <p style={{ fontSize: 16, color: '#666', marginBottom: 16 }}>
+          文档生成完成！您可以预览完整的采购文件内容，并选择导出格式。
+        </p>
+      </div>
+
+      {/* 项目信息摘要 */}
+      <Card title="项目信息摘要" style={{ marginBottom: 24 }}>
+        <Descriptions column={2} bordered>
+          <Descriptions.Item label="项目名称" span={2}>
+            {contractBaseInfo?.projectName || '大连中核凯利企业管理有限责任公司车辆定点维修保养服务采购项目'}
+          </Descriptions.Item>
+          <Descriptions.Item label="采购单位">
+            {contractBaseInfo?.procurementUnit || '中国宝原投资有限公司集采中心'}
+          </Descriptions.Item>
+          <Descriptions.Item label="服务期限">
+            {contractBaseInfo?.servicePeriod || ''}
+          </Descriptions.Item>
+          <Descriptions.Item label="服务地点" span={2}>
+            {contractBaseInfo?.serviceLocation || '辽宁省大连市'}
+          </Descriptions.Item>
+        </Descriptions>
+      </Card>
+
+      {/* 章节完成情况 */}
+      <Card title="章节完成情况" style={{ marginBottom: 24 }}>
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            {chapterList.slice(0, Math.ceil(chapterList.length / 2)).map((chapter, index) => (
+              <div 
+                key={chapter.templentChapterId} 
+                className="step4-chapter-item"
+              >
+                <div className="step4-chapter-header">
+                  <span className="step4-chapter-name">{chapter.templentChapterName}</span>
+                  <Tag color="green">已完成</Tag>
+                </div>
+                <div className="step4-chapter-info">
+                  <span className="step4-chapter-count">{getCharCount(chapter.templentChapterContent)} 字符</span>
+                </div>
+              </div>
+            ))}
+          </Col>
+          <Col span={12}>
+            {chapterList.slice(Math.ceil(chapterList.length / 2)).map((chapter, index) => (
+              <div 
+                key={chapter.templentChapterId} 
+                className="step4-chapter-item"
+              >
+                <div className="step4-chapter-header">
+                  <span className="step4-chapter-name">{chapter.templentChapterName}</span>
+                  <Tag color="green">已完成</Tag>
+                </div>
+                <div className="step4-chapter-info">
+                  <span className="step4-chapter-count">{getCharCount(chapter.templentChapterContent)} 字符</span>
+                </div>
+              </div>
+            ))}
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 文档预览 */}
+      <Card title="文档预览" style={{ marginBottom: 24 }}>
+        <div className="step4-document-preview">
+          <div className="step4-preview-content">
+            {chapterList && chapterList.length > 0 ? (
+              <div className="react-markdown-viewer">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{getFullDocumentContent()}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="step4-preview-placeholder">
+                <FileTextOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
+                <p style={{ color: '#999', marginTop: 16 }}>暂无文档内容</p>
+              </div>
+            )}
           </div>
         </div>
-      ))}
-      <div className="step3-btn-group">
-        <Button onClick={handlePrev}>上一步</Button>
-        <Button onClick={handleContentSave} type="primary">保存并进入下一步</Button>
+      </Card>
+
+      {/* 操作按钮 */}
+      <div className="step4-btn-group">
+        <div className="step4-btn-left">
+          <Button size='large' onClick={handlePrev}>上一步</Button>
+        </div>
+        <div className="step4-btn-right">
+          <Button 
+            size='large' 
+            icon={<FileTextOutlined />}
+            onClick={handleDownloadWord}
+            loading={exportLoading}
+          >
+            导出Word
+          </Button>
+          <Button size='large' type="primary" onClick={handleFinish}>
+            提交
+          </Button>
+        </div>
       </div>
+
+      {/* 预览模态框 */}
       <PreviewModal
         open={previewVisible}
         onClose={() => setPreviewVisible(false)}
-        currentChapter={currentChapter}
-      />
-      <AiOptimizeModal
-        open={aiModalVisible}
-        onClose={() => setAiModalVisible(false)}
-        onOk={() => setAiModalVisible(false)}
-        currentChapter={currentChapter}
-        onChange={handleAiEditorChange}
-      />
-      <MarkdownEditModal
-        open={mdModalOpen}  
-        onOk={(v) => {
-          handleContentUpdate(v);
-          setmdModalVisible(false);
-        }}
-        onCancel={() => setmdModalVisible(false)}
-        currentChapter={currentChapter}
+        currentChapter={null}
+        fullDocumentContent={getFullDocumentContent()}
       />
     </>
   );
 };
 
-export default ChapterEdit;
+export default Step4;

@@ -5,6 +5,8 @@ import MdEditor from 'react-markdown-editor-lite';
 import 'react-markdown-editor-lite/lib/index.css';
 import { EditOutlined } from '@ant-design/icons';
 import { ChapterItem } from '../service';
+import remarkGfm from 'remark-gfm';
+
 interface MarkdownEditModalProps {
   open: boolean;
   onOk: (v: string) => void;
@@ -29,7 +31,7 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
 
   // 自定义渲染预览
   const renderHTML = (text: string) => {
-    return <ReactMarkdown>{text}</ReactMarkdown>;
+    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>;
   };
 
   const handleUpdate = async () => {

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Input } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import { IContractBaseInfo, ChapterItem } from '../service';
+import { ChapterItem } from '../service';
+import { useModel } from 'umi';
 
 interface Block {
   title: string;
@@ -17,31 +18,46 @@ interface AiOptimizeModalProps {
   onOk: () => void;
   currentChapter: ChapterItem | null;
   onChange: (v: string) => void;
-  contractBaseInfo: IContractBaseInfo
 }
 
-const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, currentChapter, onChange, contractBaseInfo }) => {
+const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, currentChapter, onChange }) => {
   const [blocks, setBlocks] = useState<any[]>([]);
+  const {
+    saveContentBaseInfo,
+    contractBaseInfo
+  } = useModel("list.contractBaseInfo");
   useEffect(() => {
     setBlocks([
       {
         title: '项目描述/范围',
         key: 'productOverview',
-        value: contractBaseInfo.productOverview,
+        value: contractBaseInfo?.productOverview,
         placeholder: '请输入项目描述/范围...'
       },
       {
         title: '质量要求/服务标准',
         key: 'serviceStandards',
-        value: contractBaseInfo.serviceStandards,
+        value: contractBaseInfo?.serviceStandards,
         placeholder: '请输入质量要求/服务标准...'
       }
     ])
     
   }, [open])
 
-  const handleChange = (v: string) => {
+  const handleChange = (v: string, index: number) => {
+    blocks[index].value = v;
+    setBlocks([...blocks]);
+  }
 
+  const handleSubmit = async () => {
+    if (contractBaseInfo) {
+      await saveContentBaseInfo({
+        ...contractBaseInfo,
+        productOverview: blocks[0].value,
+        serviceStandards: blocks[1].value,
+      });
+      onOk();
+    }
   }
 
   return (
@@ -51,7 +67,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
       onCancel={onClose}
       footer={[
         <Button key="cancel" onClick={onClose}>取消</Button>,
-        <Button key="ok" type="primary" onClick={onOk}>确认更新</Button>
+        <Button key="ok" type="primary" onClick={handleSubmit}>确认更新</Button>
       ]}
       width="80%"
       bodyStyle={{ maxHeight: '80vh', overflow: 'auto' }}
@@ -61,7 +77,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
           <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>{idx + 1}. {block.title}</div>
           <Input.TextArea
             value={block.value}
-            onChange={e => handleChange(e.target.value)}
+            onChange={e => handleChange(e.target.value, idx)}
             autoSize={{ minRows: 4, maxRows: 10 }}
             placeholder={block.placeholder}
           />

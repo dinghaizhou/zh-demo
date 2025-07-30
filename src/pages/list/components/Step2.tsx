@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
-import { Form, Input, Button, Radio, Typography } from 'antd';
+import { Button, Form, Input, Radio, Typography } from "antd";
+import { useEffect } from "react";
+import { useModel } from "umi";
 
 const { Title, Paragraph } = Typography;
 const { TextArea } = Input;
 
 export default function Step2(props: any) {
-  const { contractBaseInfo } = props;
+  const { contractBaseInfo } = useModel("list.contractBaseInfo");
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -28,17 +29,15 @@ export default function Step2(props: any) {
       <Paragraph>
         请填写采购项目的基本信息，这些信息将用于生成采购公告和相关章节内容。
       </Paragraph>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-      >
+      <Form form={form} layout="vertical" onFinish={onFinish}>
         {/* 1. 采购项目简介 */}
-        <Title level={5} className="step2-section-title">1. 采购项目简介</Title>
+        <Title level={5} className="step2-section-title">
+          1. 采购项目简介
+        </Title>
         <Form.Item
           label="1.1 采购项目名称"
           name="projectName"
-          rules={[{ required: true, message: '请输入采购项目名称' }]}
+          rules={[{ required: true, message: "请输入采购项目名称" }]}
         >
           <Input placeholder="请输入" />
         </Form.Item>
@@ -66,52 +65,47 @@ export default function Step2(props: any) {
         <Form.Item
           label="1.5 采购项目概况"
           name="productOverview"
-          rules={[{ required: true, message: '请输入采购项目概况' }]}
+          rules={[{ required: true, message: "请输入采购项目概况" }]}
         >
           <TextArea placeholder="请输入" autoSize />
         </Form.Item>
-        <Form.Item
-          label="1.6 成交供应商成交总金额"
-          name="supplierContent"
-        >
+        <Form.Item label="1.6 成交供应商成交总金额" name="supplierContent">
           <Input placeholder="请输入" />
         </Form.Item>
 
         {/* 2. 采购范围及相关要求 */}
-        <Title level={5} className="step2-section-title">2. 采购范围及相关要求</Title>
+        <Title level={5} className="step2-section-title">
+          2. 采购范围及相关要求
+        </Title>
         <Form.Item
           label="2.1 采购范围"
           name="procurementScope"
-          rules={[{ required: true, message: '请输入采购范围' }]}
+          rules={[{ required: true, message: "请输入采购范围" }]}
         >
           <TextArea placeholder="请输入" />
         </Form.Item>
         <Form.Item
           label="2.2 服务期限"
           name="servicePeriod"
-          rules={[{ required: true, message: '请输入服务期限' }]}
+          rules={[{ required: true, message: "请输入服务期限" }]}
         >
           <Input placeholder="请输入" />
         </Form.Item>
-        <Form.Item
-          label="2.3 服务地点"
-          name="serviceLocation"
-        >
+        <Form.Item label="2.3 服务地点" name="serviceLocation">
           <Input placeholder="请输入" />
         </Form.Item>
-        <Form.Item
-          label="2.4 质量要求或服务标准"
-          name="serviceStandards"
-        >
+        <Form.Item label="2.4 质量要求或服务标准" name="serviceStandards">
           <TextArea placeholder="请输入" autoSize />
         </Form.Item>
 
         {/* 3. 供应商资格要求 */}
-        <Title level={5} className="step2-section-title">3. 供应商资格要求</Title>
+        <Title level={5} className="step2-section-title">
+          3. 供应商资格要求
+        </Title>
         <Form.Item
           label="3.1 供应商资格要求"
           name="supplierDemandTitle"
-          rules={[{ required: true, message: '请选择供应商资格要求' }]}
+          rules={[{ required: true, message: "请选择供应商资格要求" }]}
         >
           <Radio.Group>
             <Radio value="01">01 财务要求</Radio>
@@ -121,18 +115,18 @@ export default function Step2(props: any) {
         <Form.Item
           label="3.2 资格要求详细描述"
           name="supplierDemandRemark"
-          rules={[{ required: true, message: '请输入资格要求详细描述' }]}
+          rules={[{ required: true, message: "请输入资格要求详细描述" }]}
         >
-          <TextArea placeholder='请根据所选要求，详细描述财务状况或项目业绩的具体标准' />
+          <TextArea placeholder="请根据所选要求，详细描述财务状况或项目业绩的具体标准" />
         </Form.Item>
 
         {/* 按钮区域 */}
         <Form.Item>
           <div className="step2-btn-group">
-            <Button onClick={onPrev} size='large' className="step2-btn-prev">
+            <Button onClick={onPrev} size="large" className="step2-btn-prev">
               上一步
             </Button>
-            <Button size='large' type="primary" htmlType="submit">
+            <Button size="large" type="primary" htmlType="submit">
               下一步
             </Button>
           </div>

@@ -20,7 +20,7 @@ export interface ChapterItem {
 }
 
 export interface IContractBaseInfo {
-  contentList: ChapterItem[],
+  contentList?: ChapterItem[],
   id: number,
   procurementScope: string,
   productOverview: string,
@@ -31,7 +31,8 @@ export interface IContractBaseInfo {
   supplierContent: string,
   supplierDemandRemark: string,
   supplierDemandTitle: string,
-  templentId: number
+  templentId: number,
+  procurementUnit?: string
 }
 
 // 获取采购项目列表
@@ -88,5 +89,13 @@ export async function deleteContractBase(data: any) {
   return request<RequestData<any>>('/api/poc/contract/base/delete',  {
     method: 'get',
     params: data
+  });
+}
+
+// 导出文档
+export async function exportDocument(data: any) {
+  return request<RequestData<any>>('/api/poc/contract/export',  {
+    data,
+    method: 'POST',
   });
 }

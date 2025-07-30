@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Tag, Modal } from 'antd';
+import { Button, Tag, Modal, Spin } from 'antd';
 import { EyeOutlined, EditOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
 import PreviewModal from './PreviewModal';
 import AiOptimizeModal from './AiOptimizeModal';
 import MarkdownEditModal from './MarkdownEditModal';
 import { ChapterItem, initContractContent, saveContentBase} from '../service';
-
+import { useModel } from "umi";
 
 interface ChapterEditProps {
   contractBaseId: number,
-  contractBaseInfo: any,
+  contractBaseInfo?: any,
   onPrev: () => void,
   onNext: () => void,
   actionType: string
 }
 
 const ChapterEdit = (props: ChapterEditProps) => {
-  const { contractBaseId, contractBaseInfo } = props;
+  const { contractBaseInfo } = useModel("list.contractBaseInfo");
+  const [loading, setLoading] = useState(true);
+  const { contractBaseId } = props;
   const [chapterList, setChapterList] = useState<Array<ChapterItem>>([]);
   const [currentChapter, setCurrentChapter] = useState<ChapterItem | null>(null);
 
@@ -42,7 +44,8 @@ const ChapterEdit = (props: ChapterEditProps) => {
                 description: [0, 4].includes(index) ? '支持AI优化和分点编辑' : '通用Markdown编辑器'
               }
             })
-            setChapterList(_data)
+            setChapterList(_data);
+            setLoading(false);
           }
       })
     } 
@@ -95,32 +98,34 @@ const ChapterEdit = (props: ChapterEditProps) => {
   return (
     <>
       <Title level={3}>步骤三：章节内容生成与编辑</Title>
-      {chapterList.map((chapter: ChapterItem, idx) => (
-        <div key={chapter.templentChapterId} className="step3-chapter-row">
-          <div className="step3-chapter-info">
-            <div className="step3-chapter-title-row">
-              <span className="step3-chapter-title">{chapter.templentChapterName}</span>
-              <Tag color="green" className="step3-chapter-status">{chapter.status}</Tag>
+      <Spin spinning={loading} size="large">
+        {chapterList.map((chapter: ChapterItem, idx) => (
+          <div key={chapter.templentChapterId} className="step3-chapter-row">
+            <div className="step3-chapter-info">
+              <div className="step3-chapter-title-row">
+                <span className="step3-chapter-title">{chapter.templentChapterName}</span>
+                <Tag color="green" className="step3-chapter-status">{chapter.status}</Tag>
+              </div>
+              <div className="step3-chapter-desc">{chapter.description}</div>
             </div>
-            <div className="step3-chapter-desc">{chapter.description}</div>
+            <div className="step3-chapter-btns">
+              <Button icon={<EyeOutlined />} onClick={() => handlePreview(chapter)}>预览</Button>
+              <Button
+                disabled={chapter.disabled}
+                type={chapter.aiSupport ? 'primary' : 'default'}
+                className={chapter.aiSupport ? 'step3-btn-ai' : 'step3-btn'}
+                icon={<EditOutlined />}
+                onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter)}
+              >
+                {chapter.aiSupport ? '编辑/AI 优化' : '编辑'}
+              </Button>
+            </div>
           </div>
-          <div className="step3-chapter-btns">
-            <Button icon={<EyeOutlined />} onClick={() => handlePreview(chapter)}>预览</Button>
-            <Button
-              disabled={chapter.disabled}
-              type={chapter.aiSupport ? 'primary' : 'default'}
-              className={chapter.aiSupport ? 'step3-btn-ai' : 'step3-btn'}
-              icon={<EditOutlined />}
-              onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter)}
-            >
-              {chapter.aiSupport ? '编辑/AI 优化' : '编辑'}
-            </Button>
-          </div>
-        </div>
-      ))}
+        ))}
+      </Spin>
       <div className="step3-btn-group">
-        <Button onClick={handlePrev}>上一步</Button>
-        <Button onClick={handleContentSave} type="primary">保存并进入下一步</Button>
+        <Button size='large' onClick={handlePrev}>上一步</Button>
+        <Button size='large' onClick={handleContentSave} type="primary">保存并进入下一步</Button>
       </div>
       <PreviewModal
         open={previewVisible}
@@ -132,7 +137,6 @@ const ChapterEdit = (props: ChapterEditProps) => {
         onClose={() => setAiModalVisible(false)}
         onOk={() => setAiModalVisible(false)}
         currentChapter={currentChapter}
-        contractBaseInfo={contractBaseInfo}
         onChange={handleAiEditorChange}
       />
       <MarkdownEditModal

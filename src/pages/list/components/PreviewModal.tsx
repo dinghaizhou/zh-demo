@@ -1,25 +1,37 @@
 import React from 'react';
-import { Modal, Button } from 'antd';
 import ReactMarkdown from 'react-markdown';
-import { ChapterItem } from './Step3';
+import remarkGfm from 'remark-gfm';
+import { Modal } from 'antd';
+import { ChapterItem } from '../service';
 
 interface PreviewModalProps {
   open: boolean;
   onClose: () => void;
   currentChapter: ChapterItem | null;
+  fullDocumentContent?: string;
 }
 
-const PreviewModal: React.FC<PreviewModalProps> = ({ open, onClose, currentChapter }) => {
+const PreviewModal: React.FC<PreviewModalProps> = ({
+  open,
+  onClose,
+  currentChapter,
+  fullDocumentContent
+}) => {
   return (
     <Modal
+      title="文档预览"
       open={open}
-      title={<span>预览章节 - {currentChapter?.templentChapterName}</span>}
       onCancel={onClose}
-      footer={<Button onClick={onClose}>关闭</Button>}
-      width={800}
-      bodyStyle={{ maxHeight: '60vh', overflow: 'auto' }}
+      footer={null}
+      width="80%"
+      style={{ top: 20 }}
+      bodyStyle={{ maxHeight: '70vh', overflow: 'auto' }}
     >
-      <ReactMarkdown>{currentChapter?.templentChapterContent}</ReactMarkdown>
+      <div className='react-markdown-viewer' style={{ padding: '20px', background: 'white' }}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {fullDocumentContent || currentChapter?.templentChapterContent}
+        </ReactMarkdown>
+      </div>
     </Modal>
   );
 };

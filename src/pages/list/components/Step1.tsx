@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Tree, Button, Alert, Typography } from 'antd';
+import { Tree, Button, Alert, Typography, Spin } from 'antd';
+import { getCategoryTree } from '../service';
 
 const { Title, Paragraph } = Typography;
 interface TreeNode {
@@ -36,10 +37,19 @@ function findNodeTitleById(data: TreeNode[], id: string): string | null {
   return null;
 }
 
-export default function Step1({ categoryTree = [], onNext, templentId }: { categoryTree: TreeNode[], onNext: (v:string) => void, templentId: string }) {
+export default function Step1({ onNext, templentId }: { onNext: (v:string) => void, templentId: string }) {
   const [selectedKey, setSelectedKey] = useState<string>('');
   const [selectedTitle, setSelectedTitle] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [categoryTree, setCategoryTree] = useState([]);
   
+  useEffect(() => {
+    getCategoryTree().then((res) => {
+      setCategoryTree(res.data);
+      setLoading(false);
+    });
+  }, []);
+
   useEffect(() => {
     if (!selectedKey && templentId) {
       setSelectedKey(templentId);
@@ -65,40 +75,45 @@ export default function Step1({ categoryTree = [], onNext, templentId }: { categ
   return (
     <div>
       <Title level={3}>步骤一：项目初始化</Title>
-      <Paragraph>
-        请选择本次采购的类型。<b>本次POC演示主要支持服务类采购项目的文件生成。</b>
-        <br />
-        <span className="step-tip">提示：请选择最具体的采购类型（最后一级），上级分类仅用于导航。</span>
-      </Paragraph>
-      <Title level={4}>采购类型选择</Title>
-      <div className="step-type-select">
-        <Tree
-          showLine
-          className="step-type-tree"
-          treeData={_treeData}
-          onSelect={onSelect}
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          defaultExpandAll
-          autoExpandParent
-        />
-      </div>
-      {selectedKey && (
-        <Alert
-          message={
-            <>
-              已选择采购类型：<a>{selectedTitle}</a>
-            </>
+      <Spin spinning={loading} size="large">
+        <Paragraph>
+          请选择本次采购的类型。<b>本次POC演示主要支持服务类采购项目的文件生成。</b>
+          <br />
+          <span className="step-tip">提示：请选择最具体的采购类型（最后一级），上级分类仅用于导航。</span>
+        </Paragraph>
+        <Title level={4}>采购类型选择</Title>
+        <div className="step-type-select">
+          {!!categoryTree.length && 
+            <Tree
+              showLine
+              className="step-type-tree"
+              treeData={_treeData}
+              onSelect={onSelect}
+              selectedKeys={selectedKey ? [selectedKey] : []}
+              defaultExpandAll
+              autoExpandParent
+            />
           }
-          type="info"
-          showIcon
-          className="step-alert"
-        />
-      )}
-      <div className="step-btn-group">
-        <Button type="primary" size="large" disabled={!selectedKey} onClick={handleNextStep}>
-          下一步
-        </Button>
-      </div>
+          
+        </div>
+        {selectedKey && (
+          <Alert
+            message={
+              <>
+                已选择采购类型：<a>{selectedTitle}</a>
+              </>
+            }
+            type="info"
+            showIcon
+            className="step-alert"
+          />
+        )}
+        <div className="step-btn-group">
+          <Button type="primary" size="large" disabled={!selectedKey} onClick={handleNextStep}>
+            下一步
+          </Button>
+        </div>
+      </Spin>
     </div>
   );
 }
