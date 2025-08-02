@@ -51,11 +51,9 @@ export default function Step1({ onNext, templentId }: { onNext: (v:string) => vo
   }, []);
 
   useEffect(() => {
-    if (!selectedKey && templentId) {
-      setSelectedKey(templentId);
-      const title = findNodeTitleById(categoryTree, templentId);
-      if (title) setSelectedTitle(title);
-    }
+    setSelectedKey(templentId);
+    const title = findNodeTitleById(categoryTree, templentId);
+    setSelectedTitle(title || '');
   }, [templentId, categoryTree]);
 
   const onSelect = (selectedKeys: any[], info: any) => {
@@ -75,7 +73,7 @@ export default function Step1({ onNext, templentId }: { onNext: (v:string) => vo
   return (
     <div>
       <Title level={3}>步骤一：项目初始化</Title>
-      <Spin spinning={loading} size="large">
+      <Spin spinning={loading} size="large" tip="数据加载中">
         <Paragraph>
           请选择本次采购的类型。<b>本次POC演示主要支持服务类采购项目的文件生成。</b>
           <br />

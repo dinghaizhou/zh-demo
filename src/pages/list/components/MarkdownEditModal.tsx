@@ -47,6 +47,7 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       width='80%'
       className="mdedit-modal"
       okText='确认更新'
+      cancelText="取消"
       okButtonProps={{ loading: loading }}
       bodyStyle={{ height: '75vh', minHeight: 500 }}
     >

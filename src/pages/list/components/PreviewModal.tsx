@@ -26,6 +26,7 @@ const PreviewModal: React.FC<PreviewModalProps> = ({
       width="80%"
       style={{ top: 20 }}
       bodyStyle={{ maxHeight: '70vh', overflow: 'auto' }}
+      destroyOnHidden
     >
       <div className='react-markdown-viewer' style={{ padding: '20px', background: 'white' }}>
         <ReactMarkdown remarkPlugins={[remarkGfm]}>

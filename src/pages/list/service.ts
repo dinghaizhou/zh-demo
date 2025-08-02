@@ -91,11 +91,3 @@ export async function deleteContractBase(data: any) {
     params: data
   });
 }
-
-// 导出文档
-export async function exportDocument(data: any) {
-  return request<RequestData<any>>('/api/poc/contract/export',  {
-    data,
-    method: 'POST',
-  });
-}

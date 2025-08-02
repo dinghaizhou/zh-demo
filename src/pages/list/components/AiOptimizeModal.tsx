@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Button, Input } from 'antd';
+import { Modal, Button, Input, message } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
 import { ChapterItem } from '../service';
 import { useModel } from 'umi';
@@ -24,7 +24,8 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
   const [blocks, setBlocks] = useState<any[]>([]);
   const {
     saveContentBaseInfo,
-    contractBaseInfo
+    contractBaseInfo,
+    submitLoading
   } = useModel("list.contractBaseInfo");
   useEffect(() => {
     setBlocks([
@@ -56,6 +57,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
         productOverview: blocks[0].value,
         serviceStandards: blocks[1].value,
       });
+      message.success('更新成功');
       onOk();
     }
   }
@@ -67,7 +69,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
       onCancel={onClose}
       footer={[
         <Button key="cancel" onClick={onClose}>取消</Button>,
-        <Button key="ok" type="primary" onClick={handleSubmit}>确认更新</Button>
+        <Button key="ok" type="primary" onClick={handleSubmit} loading={submitLoading}>确认更新</Button>
       ]}
       width="80%"
       bodyStyle={{ maxHeight: '80vh', overflow: 'auto' }}

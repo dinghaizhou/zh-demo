@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Tag, Modal, Spin } from 'antd';
+import { Button, Tag, Modal, Spin, message } from 'antd';
 import { EyeOutlined, EditOutlined } from '@ant-design/icons';
 import Title from 'antd/es/typography/Title';
 import PreviewModal from './PreviewModal';
 import AiOptimizeModal from './AiOptimizeModal';
 import MarkdownEditModal from './MarkdownEditModal';
-import { ChapterItem, initContractContent, saveContentBase} from '../service';
+import { ChapterItem, initContractContent, saveContentBase } from '../service';
 import { useModel } from "umi";
 
 interface ChapterEditProps {
@@ -33,7 +33,7 @@ const ChapterEdit = (props: ChapterEditProps) => {
   useEffect(() => {
     if (contractBaseId) {
       initContractContent({ contractBaseId })
-      .then((res) => {
+        .then((res) => {
           if (res.status === 200) {
             let _data = res.data.map((item: ChapterItem, index: number) => {
               return {
@@ -47,8 +47,8 @@ const ChapterEdit = (props: ChapterEditProps) => {
             setChapterList(_data);
             setLoading(false);
           }
-      })
-    } 
+        })
+    }
   }, [contractBaseId])
 
   const handlePreview = (chapter: ChapterItem) => {
@@ -71,7 +71,7 @@ const ChapterEdit = (props: ChapterEditProps) => {
   };
 
   const handleContentUpdate = async (value: string) => {
-    let _contentList =  chapterList.map((item: ChapterItem) => {
+    let _contentList = chapterList.map((item: ChapterItem) => {
       if (item.templentChapterId === currentChapter?.templentChapterId) {
         return {
           ...item,
@@ -98,30 +98,33 @@ const ChapterEdit = (props: ChapterEditProps) => {
   return (
     <>
       <Title level={3}>步骤三：章节内容生成与编辑</Title>
-      <Spin spinning={loading} size="large">
-        {chapterList.map((chapter: ChapterItem, idx) => (
-          <div key={chapter.templentChapterId} className="step3-chapter-row">
-            <div className="step3-chapter-info">
-              <div className="step3-chapter-title-row">
-                <span className="step3-chapter-title">{chapter.templentChapterName}</span>
-                <Tag color="green" className="step3-chapter-status">{chapter.status}</Tag>
+      <Spin spinning={loading} size="large" tip="正在加载章节内容">
+        <div style={{minHeight: 400}}>
+          {chapterList.map((chapter: ChapterItem, idx) => (
+            <div key={chapter.templentChapterId} className="step3-chapter-row">
+              <div className="step3-chapter-info">
+                <div className="step3-chapter-title-row">
+                  <span className="step3-chapter-title">{chapter.templentChapterName}</span>
+                  <Tag color="green" className="step3-chapter-status">{chapter.status}</Tag>
+                </div>
+                <div className="step3-chapter-desc">{chapter.description}</div>
               </div>
-              <div className="step3-chapter-desc">{chapter.description}</div>
+              <div className="step3-chapter-btns">
+                <Button disabled={chapter.disabled} icon={<EyeOutlined />} onClick={() => handlePreview(chapter)}>预览</Button>
+                <Button
+                  disabled={chapter.disabled}
+                  type={chapter.aiSupport ? 'primary' : 'default'}
+                  className={chapter.aiSupport ? 'step3-btn-ai' : 'step3-btn'}
+                  icon={<EditOutlined />}
+                  onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter)}
+                >
+                  {chapter.aiSupport ? '编辑/AI 优化' : '编辑'}
+                </Button>
+              </div>
             </div>
-            <div className="step3-chapter-btns">
-              <Button icon={<EyeOutlined />} onClick={() => handlePreview(chapter)}>预览</Button>
-              <Button
-                disabled={chapter.disabled}
-                type={chapter.aiSupport ? 'primary' : 'default'}
-                className={chapter.aiSupport ? 'step3-btn-ai' : 'step3-btn'}
-                icon={<EditOutlined />}
-                onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter)}
-              >
-                {chapter.aiSupport ? '编辑/AI 优化' : '编辑'}
-              </Button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
+
       </Spin>
       <div className="step3-btn-group">
         <Button size='large' onClick={handlePrev}>上一步</Button>
@@ -140,8 +143,9 @@ const ChapterEdit = (props: ChapterEditProps) => {
         onChange={handleAiEditorChange}
       />
       <MarkdownEditModal
-        open={mdModalOpen}  
+        open={mdModalOpen}
         onOk={(v) => {
+          message.success('内容已更新！请在点击下一步时统一保存');
           handleContentUpdate(v);
           setmdModalVisible(false);
         }}

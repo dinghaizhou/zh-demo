@@ -15,7 +15,6 @@ const parseMarkdownToWordElements = (markdown: string) => {
   const tokens = marked.lexer(markdown);
   
   tokens.forEach((token) => {
-    console.log(tokens)
     switch (token.type) {
       case 'heading':
         const headingLevel = token.depth as number;
@@ -55,15 +54,13 @@ const parseMarkdownToWordElements = (markdown: string) => {
         break;
         
       case 'paragraph':
+        // 处理段落中的加粗、斜体等内联格式
+        const textRuns = parseInlineFormatting(token.text);
         elements.push(
           new Paragraph({
-            children: [
-              new TextRun({
-                text: token.text,
-                size: 20
-              })
-            ],
-            spacing: { after: 200 }
+            children: textRuns,
+            spacing: { after: 200 },
+            alignment: AlignmentType.LEFT,
           })
         );
         break;
@@ -73,48 +70,40 @@ const parseMarkdownToWordElements = (markdown: string) => {
         
         // 处理表头
         if (token.header) {
-          const headerCells = token.header.map((cell: string) =>
-            new TableCell({
+          const headerCells = token.header.map((cell: string) => {
+            const cellTextRuns = parseInlineFormatting(cell.text);
+            return new TableCell({
               children: [
                 new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: cell,
-                      bold: true,
-                      size: 20
-                    })
-                  ]
+                  children: cellTextRuns
                 })
               ],
               width: {
                 size: 100 / token.header.length,
                 type: WidthType.PERCENTAGE
               }
-            })
-          );
+            });
+          });
           tableRows.push(new TableRow({ children: headerCells }));
         }
         
         // 处理表格数据
         token.rows.forEach((row: string[]) => {
-          const cells = row.map((cell: string) =>
-            new TableCell({
+          const cells = row.map((cell: string) => {
+            const cellTextRuns = parseInlineFormatting(cell.text);
+            return new TableCell({
               children: [
                 new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: cell,
-                      size: 20
-                    })
-                  ]
+                  children: cellTextRuns,
+                  alignment: AlignmentType.LEFT,
                 })
               ],
               width: {
                 size: 100 / row.length,
                 type: WidthType.PERCENTAGE
               }
-            })
-          );
+            });
+          });
           tableRows.push(new TableRow({ children: cells }));
         });
         
@@ -131,46 +120,64 @@ const parseMarkdownToWordElements = (markdown: string) => {
         
       case 'list':
         token.items.forEach((item: any) => {
+          const itemTextRuns = parseInlineFormatting(item.text);
           elements.push(
             new Paragraph({
               children: [
-                new TextRun({
-                  text: `${token.ordered ? '1.' : '•'} ${item.text}`,
-                  size: 20
-                })
+                // new TextRun({
+                //   text: `${token.ordered ? '1.' : '•'} `,
+                //   size: 20
+                // }),
+                ...itemTextRuns
               ],
               spacing: { after: 100 },
-              bullet: token.ordered ? undefined : { level: 0 }
+              alignment: AlignmentType.LEFT,
+              // bullet: token.ordered ? undefined : { level: 0 }
             })
           );
         });
         break;
         
       case 'code':
-        elements.push(
-          new Paragraph({
-            children: [
+        // 处理代码块中的换行符
+        const codeLines = token.text.split('\n');
+        const codeTextRuns: TextRun[] = [];
+        
+        codeLines.forEach((line: string, index: number) => {
+          if (index > 0) {
+            // 添加换行符
+            codeTextRuns.push(
               new TextRun({
-                text: token.text,
+                text: '',
+                break: 1
+              })
+            );
+          }
+          
+          if (line) {
+            codeTextRuns.push(
+              new TextRun({
+                text: line,
                 size: 18,
                 font: 'Courier New'
               })
-            ],
+            );
+          }
+        });
+        
+        elements.push(
+          new Paragraph({
+            children: codeTextRuns,
             spacing: { after: 200 }
           })
         );
         break;
         
       case 'blockquote':
+        const quoteTextRuns = parseInlineFormatting(token.text);
         elements.push(
           new Paragraph({
-            children: [
-              new TextRun({
-                text: token.text,
-                size: 20,
-                color: '666666'
-              })
-            ],
+            children: quoteTextRuns,
             spacing: { after: 200 },
             indent: { left: 720 } // 0.5 inch
           })
@@ -195,14 +202,10 @@ const parseMarkdownToWordElements = (markdown: string) => {
       default:
         // 对于其他类型的token，转换为普通段落
         if ('text' in token && token.text) {
+          const textRuns = parseInlineFormatting(token.text);
           elements.push(
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: token.text,
-                  size: 20
-                })
-              ],
+              children: textRuns,
               spacing: { after: 200 }
             })
           );
@@ -212,6 +215,82 @@ const parseMarkdownToWordElements = (markdown: string) => {
   });
   
   return elements;
+};
+
+// 解析内联格式（加粗、斜体等）
+export const parseInlineFormatting = (text: string): TextRun[] => {
+  console.log('text', text)
+  const textRuns: TextRun[] = [];
+  let currentIndex = 0;
+  
+  // 匹配加粗语法 **text** 或 __text__
+  const boldRegex = /\*\*(.*?)\*\*|__(.*?)__/g;
+  let match;
+  
+  while ((match = boldRegex.exec(text)) !== null) {
+    // 添加加粗前的普通文本
+    if (match.index > currentIndex) {
+      const plainText = text.slice(currentIndex, match.index);
+      // 处理普通文本中的换行符
+      const plainTextRuns = handleLineBreaks(plainText);
+      textRuns.push(...plainTextRuns);
+    }
+    
+    // 添加加粗文本
+    const boldText = match[1] || match[2]; // 匹配第一个或第二个捕获组
+    // 处理加粗文本中的换行符
+    const boldTextRuns = handleLineBreaks(boldText, true);
+    textRuns.push(...boldTextRuns);
+    
+    currentIndex = match.index + match[0].length;
+  }
+  
+  // 添加剩余的普通文本
+  if (currentIndex < text.length) {
+    const remainingText = text.slice(currentIndex);
+    // 处理剩余文本中的换行符
+    const remainingTextRuns = handleLineBreaks(remainingText);
+    textRuns.push(...remainingTextRuns);
+  }
+  
+  // 如果没有找到任何加粗语法，返回普通文本
+  if (textRuns.length === 0) {
+    const plainTextRuns = handleLineBreaks(text);
+    textRuns.push(...plainTextRuns);
+  }
+  
+  return textRuns;
+};
+
+// 处理文本中的换行符
+export const handleLineBreaks = (text: string, isBold: boolean = false): TextRun[] => {
+  const textRuns: TextRun[] = [];
+  const lines = text.split('\n');
+  
+  lines.forEach((line, index) => {
+    if (index > 0) {
+      // 添加换行符
+      textRuns.push(
+        new TextRun({
+          text: '',
+          break: 1,
+          alignment: AlignmentType.LEFT,
+        })
+      );
+    }
+    
+    if (line) {
+      textRuns.push(
+        new TextRun({
+          text: line,
+          size: 20,
+          bold: isBold
+        })
+      );
+    }
+  });
+  
+  return textRuns;
 };
 
 // 导出markdown为Word文档
@@ -243,72 +322,72 @@ export const exportMarkdownToWord = async (
           }),
           
           // 项目信息（如果有）
-          ...(projectInfo ? [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: '项目信息',
-                  bold: true,
-                  size: 24
-                })
-              ],
-              heading: HeadingLevel.HEADING_2,
-              spacing: {
-                after: 200,
-                before: 400
-              }
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `项目名称：${projectInfo.projectName || ''}`,
-                  size: 20
-                })
-              ],
-              spacing: { after: 100 }
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `采购单位：${projectInfo.procurementUnit || ''}`,
-                  size: 20
-                })
-              ],
-              spacing: { after: 100 }
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `服务期限：${projectInfo.servicePeriod || ''}`,
-                  size: 20
-                })
-              ],
-              spacing: { after: 100 }
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `服务地点：${projectInfo.serviceLocation || ''}`,
-                  size: 20
-                })
-              ],
-              spacing: { after: 200 }
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: '文档内容',
-                  bold: true,
-                  size: 24
-                })
-              ],
-              heading: HeadingLevel.HEADING_2,
-              spacing: {
-                after: 200,
-                before: 400
-              }
-            })
-          ] : []),
+          // ...(projectInfo ? [
+          //   new Paragraph({
+          //     children: [
+          //       new TextRun({
+          //         text: '项目信息',
+          //         bold: true,
+          //         size: 24
+          //       })
+          //     ],
+          //     heading: HeadingLevel.HEADING_2,
+          //     spacing: {
+          //       after: 200,
+          //       before: 400
+          //     }
+          //   }),
+          //   new Paragraph({
+          //     children: [
+          //       new TextRun({
+          //         text: `项目名称：${projectInfo.projectName || ''}`,
+          //         size: 20
+          //       })
+          //     ],
+          //     spacing: { after: 100 }
+          //   }),
+          //   new Paragraph({
+          //     children: [
+          //       new TextRun({
+          //         text: `采购单位：${projectInfo.procurementUnit || ''}`,
+          //         size: 20
+          //       })
+          //     ],
+          //     spacing: { after: 100 }
+          //   }),
+          //   new Paragraph({
+          //     children: [
+          //       new TextRun({
+          //         text: `服务期限：${projectInfo.servicePeriod || ''}`,
+          //         size: 20
+          //       })
+          //     ],
+          //     spacing: { after: 100 }
+          //   }),
+          //   new Paragraph({
+          //     children: [
+          //       new TextRun({
+          //         text: `服务地点：${projectInfo.serviceLocation || ''}`,
+          //         size: 20
+          //       })
+          //     ],
+          //     spacing: { after: 200 }
+          //   }),
+          //   new Paragraph({
+          //     children: [
+          //       new TextRun({
+          //         text: '文档内容',
+          //         bold: true,
+          //         size: 24
+          //       })
+          //     ],
+          //     heading: HeadingLevel.HEADING_2,
+          //     spacing: {
+          //       after: 200,
+          //       before: 400
+          //     }
+          //   })
+          // ] : []),
           
           // 解析markdown内容
           ...parseMarkdownToWordElements(markdown)

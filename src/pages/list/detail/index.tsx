@@ -7,6 +7,7 @@ import Step1 from "../components/Step1";
 import Step2 from "../components/Step2";
 import Step3 from "../components/Step3";
 import Step4 from "../components/Step4";
+import { history } from "umi";
 import { saveContractBase } from "../service";
 import "./index.less";
 
@@ -25,12 +26,15 @@ const Details: React.FC = () => {
     setTemplentId,
     getContractInfo,
     templentId,
-    saveContentBaseInfo
+    saveContentBaseInfo,
+    reset
   } = useModel("list.contractBaseInfo");
 
   useEffect(() => {
     if (actionType === "edit" && params.id) {
       getContractInfo(params.id);
+    } else {
+      reset();
     }
   }, []);
 
@@ -51,6 +55,11 @@ const Details: React.FC = () => {
 
   const handleStep3Submit = () => {
     setCurrentStep(3);
+  };
+
+  const handleStep4Submit = () => {
+    setCurrentStep(3);
+    history.push('/list')
   };
 
   const handleBack = () => {
@@ -107,9 +116,8 @@ const Details: React.FC = () => {
           {currentStep === 3 && (
             <Step4
               onPrev={handleBack}
-              onNext={handleStep3Submit}
+              onNext={handleStep4Submit}
               contractBaseId={contractBaseId}
-              contractBaseInfo={contractBaseInfo}
               actionType={actionType}
             />
           )}
