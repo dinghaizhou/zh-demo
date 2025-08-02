@@ -1,5 +1,5 @@
 import { marked } from 'marked';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, PageBreak, Bookmark, PageReference, InternalHyperlink } from 'docx';
 
 // 配置marked选项
 marked.setOptions({
@@ -13,6 +13,7 @@ const parseMarkdownToWordElements = (markdown: string) => {
   
   // 使用marked解析markdown
   const tokens = marked.lexer(markdown);
+  let headingIndex = 1;
   
   tokens.forEach((token) => {
     switch (token.type) {
@@ -21,6 +22,7 @@ const parseMarkdownToWordElements = (markdown: string) => {
         let headingType: any;
         switch (headingLevel) {
           case 1:
+            console.log('token', token)
             headingType = HeadingLevel.HEADING_1;
             break;
           case 2:
@@ -43,14 +45,24 @@ const parseMarkdownToWordElements = (markdown: string) => {
         }
         elements.push(
           new Paragraph({
-            text: token.text,
+            children: [
+              new Bookmark({
+                id: `section${headingIndex}`,
+                children: [
+                  new TextRun({
+                    text: token.text,
+                  })
+                ]
+              })
+            ],
             heading: headingType,
             spacing: {
               after: 200,
               before: token.depth === 1 ? 400 : 200
-            }
+            },
           })
         );
+        headingIndex++;
         break;
         
       case 'paragraph':
@@ -70,8 +82,8 @@ const parseMarkdownToWordElements = (markdown: string) => {
         
         // 处理表头
         if (token.header) {
-          const headerCells = token.header.map((cell: string) => {
-            const cellTextRuns = parseInlineFormatting(cell.text);
+          const headerCells = token.header.map((cell: any) => {
+            const cellTextRuns = parseInlineFormatting(cell.text || cell);
             return new TableCell({
               children: [
                 new Paragraph({
@@ -88,9 +100,9 @@ const parseMarkdownToWordElements = (markdown: string) => {
         }
         
         // 处理表格数据
-        token.rows.forEach((row: string[]) => {
-          const cells = row.map((cell: string) => {
-            const cellTextRuns = parseInlineFormatting(cell.text);
+        token.rows.forEach((row: any[]) => {
+          const cells = row.map((cell: any) => {
+            const cellTextRuns = parseInlineFormatting(cell.text || cell);
             return new TableCell({
               children: [
                 new Paragraph({
@@ -219,7 +231,6 @@ const parseMarkdownToWordElements = (markdown: string) => {
 
 // 解析内联格式（加粗、斜体等）
 export const parseInlineFormatting = (text: string): TextRun[] => {
-  console.log('text', text)
   const textRuns: TextRun[] = [];
   let currentIndex = 0;
   
@@ -265,7 +276,8 @@ export const parseInlineFormatting = (text: string): TextRun[] => {
 // 处理文本中的换行符
 export const handleLineBreaks = (text: string, isBold: boolean = false): TextRun[] => {
   const textRuns: TextRun[] = [];
-  const lines = text.split('\n');
+  if (!text || typeof text !== 'string') return textRuns;
+  const lines = text?.split('\n');
   
   lines.forEach((line, index) => {
     if (index > 0) {
@@ -274,7 +286,6 @@ export const handleLineBreaks = (text: string, isBold: boolean = false): TextRun
         new TextRun({
           text: '',
           break: 1,
-          alignment: AlignmentType.LEFT,
         })
       );
     }
@@ -293,6 +304,308 @@ export const handleLineBreaks = (text: string, isBold: boolean = false): TextRun
   return textRuns;
 };
 
+// 创建封面
+const createCoverPage = (projectInfo?: {
+  projectName?: string;
+  procurementUnit?: string;
+  servicePeriod?: string;
+  serviceLocation?: string;
+}) => {
+  const currentDate = new Date().toLocaleDateString('zh-CN');
+  
+  return [
+    // 顶部空白
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: '',
+        })
+      ],
+      spacing: { before: 600 }
+    }),
+    
+    // 标题
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: projectInfo?.projectName || '采购项目文档',
+          bold: true,
+          size: 36,
+        })
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: {
+        after: 2000,
+        before: 200
+      }
+    }),
+    
+    // 项目信息表格
+    new Table({
+      rows: [
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: '项目名称',
+                      bold: true,
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER
+                })
+              ],
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            }),
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: projectInfo?.projectName || '',
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.LEFT
+                })
+              ],
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            })
+          ]
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: '采购单位',
+                      bold: true,
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER
+                })
+              ],
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            }),
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: projectInfo?.procurementUnit || '',
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.LEFT
+                })
+              ],
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            })
+          ]
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: '服务期限',
+                      bold: true,
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER
+                })
+              ],
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            }),
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: projectInfo?.servicePeriod || '',
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.LEFT
+                })
+              ],
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            })
+          ]
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: '服务地点',
+                      bold: true,
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER
+                })
+              ],
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            }),
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: projectInfo?.serviceLocation || '',
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.LEFT
+                })
+              ],
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            })
+          ]
+        }),
+        new TableRow({
+          children: [
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: '生成日期',
+                      bold: true,
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.CENTER
+                })
+              ],
+              width: { size: 30, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            }),
+            new TableCell({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: currentDate,
+                      size: 20
+                    })
+                  ],
+                  alignment: AlignmentType.LEFT
+                })
+              ],
+              width: { size: 70, type: WidthType.PERCENTAGE },
+              margins: { top: 200, bottom: 200, left: 200, right: 200 }
+            })
+          ]
+        })
+      ],
+      width: { size: 80, type: WidthType.PERCENTAGE },
+      alignment: AlignmentType.CENTER,
+      margins: { top: 800, bottom: 400, left: 400, right: 400 }
+    }),
+    
+    // 底部空白
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: '',
+        })
+      ],
+      spacing: { after: 800 }
+    }),
+    
+    // 分页符
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: '',
+          break: 1
+        })
+      ],
+      spacing: { after: 200 }
+    })
+  ];
+};
+
+// 创建目录
+const createTableOfContents = (markdown: string) => {
+  const elements: any[] = [];
+  
+  // 目录标题
+  elements.push(
+    new Paragraph({
+      children: [
+        new TextRun({
+          text: '目录',
+          bold: true,
+          size: 24
+        })
+      ],
+      alignment: AlignmentType.CENTER,
+      spacing: {
+        after: 300,
+        before: 200
+      },
+      pageBreakBefore: true,
+    })
+  );
+  
+  // 解析markdown获取标题
+  const tokens = marked.lexer(markdown);
+  let headingIndex = 1;
+  
+  tokens.forEach((token) => {
+    if (token.type === 'heading') {
+      // 根据标题深度添加缩进
+      const indent = (token.depth - 1) * 20;
+      
+      elements.push(
+        new Paragraph({
+          children: [
+            new InternalHyperlink({
+              children: [
+                new TextRun({
+                  text: `${token.text}`,
+                  size: 20,
+                  color: '0563C1',
+                  underline: {}
+                })
+              ],
+              anchor: `section${headingIndex}`
+            })
+          ],
+          spacing: { after: 100 },
+          indent: { left: indent }
+        })
+      );
+      
+      headingIndex++;
+    }
+  });
+  
+  return elements;
+};
+
 // 导出markdown为Word文档
 export const exportMarkdownToWord = async (
   markdown: string, 
@@ -305,89 +618,43 @@ export const exportMarkdownToWord = async (
   }
 ) => {
   try {
+    // 创建封面
+    const coverPage = createCoverPage(projectInfo);
+    
+    // 创建目录
+    const tableOfContents = createTableOfContents(markdown);
+    
     // 创建Word文档
     const doc = new Document({
       sections: [{
         properties: {},
         children: [
+          // 封面
+          ...coverPage,
+          
+          // 目录
+          ...tableOfContents,
+          
           // 文档标题
           new Paragraph({
-            text: projectInfo?.projectName || projectName,
+            children: [
+              new Bookmark({
+                id: "section1",
+                children: [
+                  new TextRun({
+                    text: projectInfo?.projectName || projectName,
+                  })
+                ]
+              })
+            ],
             heading: HeadingLevel.HEADING_1,
             alignment: AlignmentType.CENTER,
             spacing: {
               after: 200,
               before: 200
-            }
+            },
+            pageBreakBefore: true,
           }),
-          
-          // 项目信息（如果有）
-          // ...(projectInfo ? [
-          //   new Paragraph({
-          //     children: [
-          //       new TextRun({
-          //         text: '项目信息',
-          //         bold: true,
-          //         size: 24
-          //       })
-          //     ],
-          //     heading: HeadingLevel.HEADING_2,
-          //     spacing: {
-          //       after: 200,
-          //       before: 400
-          //     }
-          //   }),
-          //   new Paragraph({
-          //     children: [
-          //       new TextRun({
-          //         text: `项目名称：${projectInfo.projectName || ''}`,
-          //         size: 20
-          //       })
-          //     ],
-          //     spacing: { after: 100 }
-          //   }),
-          //   new Paragraph({
-          //     children: [
-          //       new TextRun({
-          //         text: `采购单位：${projectInfo.procurementUnit || ''}`,
-          //         size: 20
-          //       })
-          //     ],
-          //     spacing: { after: 100 }
-          //   }),
-          //   new Paragraph({
-          //     children: [
-          //       new TextRun({
-          //         text: `服务期限：${projectInfo.servicePeriod || ''}`,
-          //         size: 20
-          //       })
-          //     ],
-          //     spacing: { after: 100 }
-          //   }),
-          //   new Paragraph({
-          //     children: [
-          //       new TextRun({
-          //         text: `服务地点：${projectInfo.serviceLocation || ''}`,
-          //         size: 20
-          //       })
-          //     ],
-          //     spacing: { after: 200 }
-          //   }),
-          //   new Paragraph({
-          //     children: [
-          //       new TextRun({
-          //         text: '文档内容',
-          //         bold: true,
-          //         size: 24
-          //       })
-          //     ],
-          //     heading: HeadingLevel.HEADING_2,
-          //     spacing: {
-          //       after: 200,
-          //       before: 400
-          //     }
-          //   })
-          // ] : []),
           
           // 解析markdown内容
           ...parseMarkdownToWordElements(markdown)

@@ -103,21 +103,29 @@ export default function Step2(props: any) {
           3. 供应商资格要求
         </Title>
         <Form.Item
-          label="3.1 供应商资格要求"
-          name="supplierDemandTitle"
-          rules={[{ required: true, message: "请选择供应商资格要求" }]}
+          label="3.1 财务要求"
+          name="supplierFinanceDemand"
         >
-          <Radio.Group>
-            <Radio value="01">01 财务要求</Radio>
-            <Radio value="02">02 业绩要求</Radio>
-          </Radio.Group>
+          <TextArea placeholder="根据实际填写" autoSize />
         </Form.Item>
         <Form.Item
-          label="3.2 资格要求详细描述"
-          name="supplierDemandRemark"
-          rules={[{ required: true, message: "请输入资格要求详细描述" }]}
+          label="3.2 业绩要求"
+          name="supplierPerformanceDemand"
         >
-          <TextArea placeholder="请根据所选要求，详细描述财务状况或项目业绩的具体标准" />
+          <TextArea placeholder="根据实际填写" autoSize />
+        </Form.Item>
+       
+        <Form.Item
+          label="3.3 承担本项目的主要人员要求"
+          name="supplierPersonDemand"
+        >
+          <TextArea placeholder="根据实际填写" autoSize />
+        </Form.Item>
+        <Form.Item
+          label="3.4 其他要求"
+          name="supplierOtherDemand"
+        >
+          <TextArea placeholder="根据实际填写" autoSize />
         </Form.Item>
 
         {/* 按钮区域 */}

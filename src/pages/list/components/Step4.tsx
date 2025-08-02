@@ -59,12 +59,13 @@ const Step4 = (props: Step4Props) => {
 
     setExportLoading(true);
     try {
+      console.log('contractBaseInfo', contractBaseInfo)
       await exportMarkdownToWord(
         content,
         contractBaseInfo?.projectName || "采购文档",
         {
           projectName: contractBaseInfo?.projectName,
-          procurementUnit: contractBaseInfo?.procurementUnit,
+          procurementUnit: contractBaseInfo?.procurementUnit || '中国宝原投资有限公司集采中心',
           servicePeriod: contractBaseInfo?.servicePeriod,
           serviceLocation: contractBaseInfo?.serviceLocation,
         }

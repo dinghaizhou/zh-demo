@@ -1,6 +1,6 @@
 import { PageContainer, ProCard } from "@ant-design/pro-components";
 import { useParams } from "@umijs/max";
-import { Steps } from "antd";
+import { Steps, Button } from "antd";
 import React, { useEffect, useState } from "react";
 import { useModel } from "umi";
 import Step1 from "../components/Step1";
@@ -9,6 +9,7 @@ import Step3 from "../components/Step3";
 import Step4 from "../components/Step4";
 import { history } from "umi";
 import { saveContractBase } from "../service";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import "./index.less";
 
 const actionTypeName = {
@@ -20,7 +21,7 @@ const Details: React.FC = () => {
   const params = useParams();
   const actionType = params.id === "add" ? "create" : "edit";
   const [currentStep, setCurrentStep] = useState(0);
-  const [contractBaseId, setContractBaseId] = useState<any>(params.id || null);
+  const [contractBaseId, setContractBaseId] = useState<any>(null);
   const {
     contractBaseInfo,
     setTemplentId,
@@ -44,10 +45,12 @@ const Details: React.FC = () => {
   };
 
   const handleStep2Submit = async (value: any) => {
+    console.log('contractBaseInfo', contractBaseInfo)
     const data = await saveContentBaseInfo({
       ...(contractBaseInfo || {}),
       ...value,
       templentId,
+      id: contractBaseId,
     })
     setCurrentStep(2);
     setContractBaseId(data);
@@ -65,10 +68,27 @@ const Details: React.FC = () => {
   const handleBack = () => {
     setCurrentStep(currentStep - 1);
   };
+
+  const handleBackToList = () => {
+    history.push('/list');
+  };
+
   return (
     <PageContainer
       pageHeaderRender={() => {
-        return <h2>{actionTypeName[actionType]} 大模型辅助采购生成</h2>;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Button 
+              type="text" 
+              icon={<ArrowLeftOutlined />} 
+              onClick={handleBackToList}
+              style={{ padding: 0, height: 'auto' }}
+            >
+              返回列表
+            </Button>
+            <h2 style={{ margin: 0 }}>{actionTypeName[actionType]} 大模型辅助采购生成</h2>
+          </div>
+        );
       }}
     >
       <ProCard boxShadow style={{ marginTop: 20 }}>

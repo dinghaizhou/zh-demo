@@ -1,16 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Input, message } from 'antd';
 import { EditOutlined } from '@ant-design/icons';
-import { ChapterItem } from '../service';
+import { ChapterItem, getAiOptimize } from '../service';
 import { useModel } from 'umi';
-
-interface Block {
-  title: string;
-  value: string;
-  onChange: (v: string) => void;
-  onAiClick: () => void;
-  placeholder?: string;
-}
 
 interface AiOptimizeModalProps {
   open: boolean;
@@ -33,13 +25,15 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
         title: '项目描述/范围',
         key: 'productOverview',
         value: contractBaseInfo?.productOverview,
-        placeholder: '请输入项目描述/范围...'
+        placeholder: '请输入项目描述/范围...',
+        type: 'ov'
       },
       {
         title: '质量要求/服务标准',
         key: 'serviceStandards',
         value: contractBaseInfo?.serviceStandards,
-        placeholder: '请输入质量要求/服务标准...'
+        placeholder: '请输入质量要求/服务标准...',
+        type: 'req'
       }
     ])
     
@@ -60,6 +54,17 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
       message.success('更新成功');
       onOk();
     }
+  }
+
+  const handleAiWrite = async (block: any) => {
+    if (!block.value) {
+      message.warning('请先输入内容');
+      return;
+    }
+    const res = await getAiOptimize({
+      content: block.value,
+      type: block.type
+    });
   }
 
   return (
@@ -84,7 +89,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
             placeholder={block.placeholder}
           />
           <div style={{ textAlign: 'right', marginTop: 8 }}>
-            <Button icon={<EditOutlined />} onClick={block.onAiClick}>AI 帮我写</Button>
+            <Button icon={<EditOutlined />} onClick={() => handleAiWrite(block)}>AI 帮我写</Button>
           </div>
         </div>
       ))}

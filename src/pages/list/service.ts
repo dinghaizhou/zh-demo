@@ -91,3 +91,21 @@ export async function deleteContractBase(data: any) {
     params: data
   });
 }
+
+
+/** AI优化接口 GET /api/poc/ai/chat */
+export async function getAiOptimize(
+  params: {
+    content: string;
+    type: string;
+  },
+  options?: { [key: string]: any },
+) {
+  return request<RequestData<any>>('/api/poc/ai/chat', {
+    method: 'GET',
+    params: {
+      ...params,
+    },
+    ...(options || {}),
+  });
+}
