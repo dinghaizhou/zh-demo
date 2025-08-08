@@ -67,7 +67,7 @@ export default function Step2(props: any) {
           name="productOverview"
           rules={[{ required: true, message: "请输入采购项目概况" }]}
         >
-          <TextArea placeholder="请输入" autoSize />
+          <TextArea placeholder="请输入" />
         </Form.Item>
         <Form.Item label="1.6 成交供应商成交总金额" name="supplierContent">
           <Input placeholder="请输入" />
@@ -95,7 +95,7 @@ export default function Step2(props: any) {
           <Input placeholder="请输入" />
         </Form.Item>
         <Form.Item label="2.4 质量要求或服务标准" name="serviceStandards">
-          <TextArea placeholder="请输入" autoSize />
+          <TextArea placeholder="请输入" />
         </Form.Item>
 
         {/* 3. 供应商资格要求 */}
@@ -106,26 +106,26 @@ export default function Step2(props: any) {
           label="3.1 财务要求"
           name="supplierFinanceDemand"
         >
-          <TextArea placeholder="根据实际填写" autoSize />
+          <TextArea placeholder="根据实际填写" />
         </Form.Item>
         <Form.Item
           label="3.2 业绩要求"
           name="supplierPerformanceDemand"
         >
-          <TextArea placeholder="根据实际填写" autoSize />
+          <TextArea placeholder="根据实际填写" />
         </Form.Item>
        
         <Form.Item
           label="3.3 承担本项目的主要人员要求"
           name="supplierPersonDemand"
         >
-          <TextArea placeholder="根据实际填写" autoSize />
+          <TextArea placeholder="根据实际填写" />
         </Form.Item>
         <Form.Item
           label="3.4 其他要求"
           name="supplierOtherDemand"
         >
-          <TextArea placeholder="根据实际填写" autoSize />
+          <TextArea placeholder="根据实际填写" />
         </Form.Item>
 
         {/* 按钮区域 */}

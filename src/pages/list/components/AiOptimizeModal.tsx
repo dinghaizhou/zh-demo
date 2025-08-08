@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, Button, Input, message } from 'antd';
-import { EditOutlined } from '@ant-design/icons';
+import { RobotOutlined, EditOutlined } from '@ant-design/icons';
 import { ChapterItem, getAiOptimize } from '../service';
 import { useModel } from 'umi';
 
@@ -26,17 +26,19 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
         key: 'productOverview',
         value: contractBaseInfo?.productOverview,
         placeholder: '请输入项目描述/范围...',
-        type: 'ov'
+        type: 'ov',
+        loading: false,
       },
       {
         title: '质量要求/服务标准',
         key: 'serviceStandards',
         value: contractBaseInfo?.serviceStandards,
         placeholder: '请输入质量要求/服务标准...',
-        type: 'req'
+        type: 'req',
+        loading: false,
       }
     ])
-    
+
   }, [open])
 
   const handleChange = (v: string, index: number) => {
@@ -61,10 +63,20 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
       message.warning('请先输入内容');
       return;
     }
-    const res = await getAiOptimize({
-      content: block.value,
-      type: block.type
-    });
+    setBlocks(blocks.map(b => b.key === block.key ? { ...b, loading: true } : b));
+    try {
+      const res = await getAiOptimize({
+        content: block.value,
+        type: block.type
+      });
+      if (res.status === 200) {
+        handleChange(res.data, blocks.findIndex(b => b.key === block.key));
+        setBlocks(blocks.map(b => b.key === block.key ? { ...b, loading: false, value: res.data } : b));
+        message.success('AI 优化成功');
+      }
+    } catch (error) {
+      setBlocks(blocks.map(b => b.key === block.key ? { ...b, loading: false } : b));
+    }
   }
 
   return (
@@ -76,7 +88,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
         <Button key="cancel" onClick={onClose}>取消</Button>,
         <Button key="ok" type="primary" onClick={handleSubmit} loading={submitLoading}>确认更新</Button>
       ]}
-      width="80%"
+      width="50%"
       bodyStyle={{ maxHeight: '80vh', overflow: 'auto' }}
     >
       {blocks.map((block, idx) => (
@@ -89,7 +101,7 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
             placeholder={block.placeholder}
           />
           <div style={{ textAlign: 'right', marginTop: 8 }}>
-            <Button icon={<EditOutlined />} onClick={() => handleAiWrite(block)}>AI 帮我写</Button>
+            <Button loading={block.loading} icon={<RobotOutlined />} onClick={() => handleAiWrite(block)}>AI 帮我写</Button>
           </div>
         </div>
       ))}

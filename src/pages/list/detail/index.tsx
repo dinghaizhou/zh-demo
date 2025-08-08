@@ -50,7 +50,7 @@ const Details: React.FC = () => {
       ...(contractBaseInfo || {}),
       ...value,
       templentId,
-      id: contractBaseId,
+      id: contractBaseId || contractBaseInfo?.id,
     })
     setCurrentStep(2);
     setContractBaseId(data);
