@@ -91,33 +91,34 @@ const Details: React.FC = () => {
         );
       }}
     >
-      <ProCard boxShadow style={{ marginTop: 20 }}>
-        <Steps
-          current={currentStep}
-          onChange={(val) => {
-            if (val < currentStep) setCurrentStep(val);
-          }}
-          items={[
-            {
-              title: "项目初始化",
-              description: "选择采购类型",
-            },
-            {
-              title: "导航表单填写",
-              description: "填写项目基本信息",
-            },
-            {
-              title: "章节内容生成",
-              description: "生成和编辑章节内容",
-            },
-            {
-              title: "整合与导出",
-              description: "预览和导出文档",
-            },
-          ]}
-        />
-      </ProCard>
+      
       <div className="step-content">
+        <ProCard boxShadow style={{ marginTop: 20, marginBottom: 20 }}>
+          <Steps
+            current={currentStep}
+            onChange={(val) => {
+              if (val < currentStep) setCurrentStep(val);
+            }}
+            items={[
+              {
+                title: "项目初始化",
+                description: "选择采购类型",
+              },
+              {
+                title: "导航表单填写",
+                description: "填写项目基本信息",
+              },
+              {
+                title: "章节内容生成",
+                description: "生成和编辑章节内容",
+              },
+              {
+                title: "整合与导出",
+                description: "预览和导出文档",
+              },
+            ]}
+          />
+        </ProCard>
         <ProCard bordered>
           {currentStep === 0 && (
             <Step1 onNext={handleStep1Submit} templentId={templentId} />
