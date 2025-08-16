@@ -38,8 +38,8 @@ const ChapterEdit = (props: ChapterEditProps) => {
             let _data = res.data.map((item: ChapterItem, index: number) => {
               return {
                 ...item,
-                aiSupport: !![0, 4].includes(index),
-                disabled: +index === 4,
+                aiSupport: !![0].includes(index),
+                disabled: false,
                 status: '已完成',
                 description: [0, 4].includes(index) ? '支持AI优化和分点编辑' : '通用Markdown编辑器'
               }
