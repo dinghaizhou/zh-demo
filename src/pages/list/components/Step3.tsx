@@ -22,6 +22,7 @@ const ChapterEdit = (props: ChapterEditProps) => {
   const { contractBaseId } = props;
   const [chapterList, setChapterList] = useState<Array<ChapterItem>>([]);
   const [currentChapter, setCurrentChapter] = useState<ChapterItem | null>(null);
+  const [currentChapterIndex, setCurrentChapterIndex] = useState<number | undefined>(undefined);
 
   // 预览框
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -61,8 +62,9 @@ const ChapterEdit = (props: ChapterEditProps) => {
     setCurrentChapter(chapter);
   };
 
-  const handleMarkdownEdit = (chapter: ChapterItem) => {
+  const handleMarkdownEdit = (chapter: ChapterItem, index: number) => {
     setCurrentChapter(chapter);
+    setCurrentChapterIndex(index);
     setmdModalVisible(true);
   };
 
@@ -116,7 +118,7 @@ const ChapterEdit = (props: ChapterEditProps) => {
                   type={chapter.aiSupport ? 'primary' : 'default'}
                   className={chapter.aiSupport ? 'step3-btn-ai' : 'step3-btn'}
                   icon={<EditOutlined />}
-                  onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter)}
+                  onClick={chapter.aiSupport ? () => handleAiEdit(chapter) : () => handleMarkdownEdit(chapter, idx)}
                 >
                   {chapter.aiSupport ? '编辑/AI 优化' : '编辑'}
                 </Button>
@@ -151,6 +153,7 @@ const ChapterEdit = (props: ChapterEditProps) => {
         }}
         onCancel={() => setmdModalVisible(false)}
         currentChapter={currentChapter}
+        currentChapterIndex={currentChapterIndex}
       />
     </>
   );

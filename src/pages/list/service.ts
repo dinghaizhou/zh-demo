@@ -96,7 +96,7 @@ export async function deleteContractBase(data: any) {
 /** AI优化接口 GET /api/poc/ai/chat */
 export async function getAiOptimize(
   params: {
-    content: string;
+    content?: string;
     type: string;
   },
   options?: { [key: string]: any },

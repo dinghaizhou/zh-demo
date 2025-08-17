@@ -1,25 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { Modal } from 'antd';
+import { Button, message, Modal } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import MdEditor from 'react-markdown-editor-lite';
 import 'react-markdown-editor-lite/lib/index.css';
-import { EditOutlined } from '@ant-design/icons';
-import { ChapterItem } from '../service';
+import { EditOutlined, RobotOutlined } from '@ant-design/icons';
+import { ChapterItem, getAiOptimize } from '../service';
 import remarkGfm from 'remark-gfm';
+import { set } from 'lodash';
 
 interface MarkdownEditModalProps {
   open: boolean;
   onOk: (v: string) => void;
   onCancel: () => void;
   currentChapter: ChapterItem | null;
-  value?: string;
+  currentChapterIndex: number;
 }
 
 const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
-  open, onOk, onCancel, currentChapter
+  open, onOk, onCancel, currentChapter, currentChapterIndex
 }) => {
   const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(false);
+  const [ailoading, setAiLoading] = useState(false);
   useEffect(() => {
     setContent(currentChapter?.templentChapterContent || '')
   }, [currentChapter, open])
@@ -38,6 +39,23 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
     onOk(content);
   }
 
+  const handleAiWrite = async () => {
+    try {
+      setAiLoading(true);
+      const res = await getAiOptimize({
+        type: 'chapter'
+      });
+      if (res.status === 200) {
+        setContent(res.data)
+      } else {
+        message.error(res.message);
+      }
+    } catch (error) {
+      message.error('AI 优化失败');
+    } finally {
+      setAiLoading(false);
+    }
+  }
   return (
     <Modal
       open={open}
@@ -48,8 +66,12 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       className="mdedit-modal"
       okText='确认更新'
       cancelText="取消"
-      okButtonProps={{ loading: loading }}
       bodyStyle={{ height: '75vh', minHeight: 500 }}
+      footer={<>
+        <Button onClick={onCancel}>取消</Button>
+        {currentChapterIndex === 4 && <Button loading={ailoading} icon={<RobotOutlined />} onClick={() => handleAiWrite()}>AI 帮我写</Button>}
+        <Button onClick={handleUpdate}>确认更新</Button>
+      </>}
     >
       <div className="mdedit-main">
         <div className="mdedit-editor-col">
@@ -60,11 +82,9 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
               style={{ height: '100%', minHeight: 350 }}
               renderHTML={renderHTML}
               onChange={handleEditorChange}
-              view={{ menu: true, md: true, html: false }}
-              
+              view={{ menu: true, md: true, html: true }}
             />
           </div>
-          
         </div>
       </div>
     </Modal>
