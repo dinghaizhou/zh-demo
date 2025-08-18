@@ -6,7 +6,7 @@ import 'react-markdown-editor-lite/lib/index.css';
 import { EditOutlined, RobotOutlined } from '@ant-design/icons';
 import { ChapterItem, getAiOptimize } from '../service';
 import remarkGfm from 'remark-gfm';
-import { set } from 'lodash';
+import { useModel } from 'umi';
 
 interface MarkdownEditModalProps {
   open: boolean;
@@ -21,6 +21,9 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
 }) => {
   const [content, setContent] = useState('')
   const [ailoading, setAiLoading] = useState(false);
+  const {
+    contractBaseInfo,
+  } = useModel("list.contractBaseInfo");
   useEffect(() => {
     setContent(currentChapter?.templentChapterContent || '')
   }, [currentChapter, open])
@@ -44,7 +47,7 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       setAiLoading(true);
       const res = await getAiOptimize({
         type: 'chapter',
-        content: ''
+        content: contractBaseInfo?.productOverview || ''
       });
       if (res.status === 200) {
         setContent(res.data)
@@ -65,6 +68,7 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
 
   return (
     <Modal
+      destroyOnClose
       open={open}
       title={<span><EditOutlined style={{ marginRight: 8 }} />编辑章节 - {currentChapter?.templentChapterName}</span>}
       onOk={handleUpdate}
@@ -75,7 +79,7 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       cancelText="取消"
       bodyStyle={{ height: '75vh', minHeight: 500 }}
       footer={<>
-        <Button onClick={onCancel}>取消</Button>
+        <Button onClick={handleCancel}>取消</Button>
         {currentChapterIndex === 4 && <Button loading={ailoading} icon={<RobotOutlined />} onClick={() => handleAiWrite()}>AI 帮我写</Button>}
         <Button disabled={ailoading} onClick={handleUpdate}>确认更新</Button>
       </>}
