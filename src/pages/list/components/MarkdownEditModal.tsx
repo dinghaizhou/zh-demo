@@ -43,7 +43,8 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
     try {
       setAiLoading(true);
       const res = await getAiOptimize({
-        type: 'chapter'
+        type: 'chapter',
+        content: ''
       });
       if (res.status === 200) {
         setContent(res.data)
@@ -56,12 +57,18 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       setAiLoading(false);
     }
   }
+
+  const handleCancel = () => {
+    setAiLoading(false);
+    onCancel()
+  }
+
   return (
     <Modal
       open={open}
       title={<span><EditOutlined style={{ marginRight: 8 }} />编辑章节 - {currentChapter?.templentChapterName}</span>}
       onOk={handleUpdate}
-      onCancel={onCancel}
+      onCancel={handleCancel}
       width='80%'
       className="mdedit-modal"
       okText='确认更新'
@@ -70,7 +77,7 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       footer={<>
         <Button onClick={onCancel}>取消</Button>
         {currentChapterIndex === 4 && <Button loading={ailoading} icon={<RobotOutlined />} onClick={() => handleAiWrite()}>AI 帮我写</Button>}
-        <Button onClick={handleUpdate}>确认更新</Button>
+        <Button disabled={ailoading} onClick={handleUpdate}>确认更新</Button>
       </>}
     >
       <div className="mdedit-main">
