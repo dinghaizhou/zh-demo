@@ -47,7 +47,8 @@ const MarkdownEditModal: React.FC<MarkdownEditModalProps> = ({
       setAiLoading(true);
       const res = await getAiOptimize({
         type: 'chapter',
-        content: contractBaseInfo?.productOverview || ''
+        content: contractBaseInfo?.productOverview || '',
+        templentId: contractBaseInfo?.templentId
       });
       if (res.status === 200) {
         setContent(res.data)

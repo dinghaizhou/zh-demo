@@ -67,7 +67,8 @@ const AiOptimizeModal: React.FC<AiOptimizeModalProps> = ({ open, onClose, onOk, 
     try {
       const res = await getAiOptimize({
         content: block.value,
-        type: block.type
+        type: block.type,
+        templentId: contractBaseInfo?.templentId
       });
       if (res.status === 200) {
         handleChange(res.data, blocks.findIndex(b => b.key === block.key));

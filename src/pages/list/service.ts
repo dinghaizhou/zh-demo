@@ -98,6 +98,7 @@ export async function getAiOptimize(
   params: {
     content?: string;
     type: string;
+    templentId: any;
   },
   options?: { [key: string]: any },
 ) {
